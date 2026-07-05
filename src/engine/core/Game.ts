@@ -1,3 +1,4 @@
+import { Keyboard } from "../input/Keyboard";
 import { Scene } from "./Scene";
 
 export class Game {
@@ -23,6 +24,8 @@ export class Game {
     this.lastTime = time;
     this.scene.update(Number.isFinite(deltaTime) ? deltaTime : 0);
     this.scene.render(this.ctx);
+    // Roll over per-frame input edges after everything has read them.
+    Keyboard.instance.endFrame();
     requestAnimationFrame(this.loop);
   };
 }

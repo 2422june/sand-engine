@@ -19,6 +19,10 @@ export class Entity {
     return this.components.find((component) => component instanceof ComponentType) as T | undefined;
   }
 
+  getComponents<T extends Component>(ComponentType: new (...args: never[]) => T): T[] {
+    return this.components.filter((component) => component instanceof ComponentType) as T[];
+  }
+
   update(deltaTime: number): void {
     for (const component of this.components) {
       component.update(deltaTime);
