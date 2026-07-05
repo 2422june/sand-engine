@@ -93,6 +93,27 @@ export class Keyboard {
     return [...this.held];
   }
 
+  /**
+   * Inject a virtual key-down (e.g. from an on-screen touch button).
+   * Behaves exactly like a physical keydown, including the auto-repeat guard,
+   * so every query helper (`isHeld`/`wasPressed`/axes) works unchanged.
+   */
+  virtualDown(key: string): void {
+    const k = Keyboard.normalize(key);
+    if (this.held.has(k)) {
+      return;
+    }
+    this.held.add(k);
+    this.pressedThisFrame.add(k);
+  }
+
+  /** Release a virtual key. Mirrors a physical keyup. */
+  virtualUp(key: string): void {
+    const k = Keyboard.normalize(key);
+    this.held.delete(k);
+    this.releasedThisFrame.add(k);
+  }
+
   /** Roll over the per-frame edge state. Call once at the end of each frame. */
   endFrame(): void {
     this.pressedThisFrame.clear();

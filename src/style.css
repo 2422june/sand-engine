@@ -34,6 +34,36 @@ body {
   color: #bfd1e6;
 }
 
+.game-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.game-tab {
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #cdd9ec;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.game-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.game-tab.active {
+  background: #4dd0e1;
+  border-color: #4dd0e1;
+  color: #06222a;
+  font-weight: 600;
+}
+
 .stage {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
@@ -45,6 +75,78 @@ canvas {
   display: block;
   width: 100%;
   height: auto;
+  /* Let the game own touch gestures instead of the browser scrolling/zooming. */
+  touch-action: none;
   background:
     linear-gradient(180deg, rgba(58, 88, 125, 0.24), rgba(10, 13, 18, 0.2));
+}
+
+/* ---- Mobile on-screen gamepad ---- */
+.touch-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touch-controls--hidden {
+  display: none;
+}
+
+.touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(2, 56px);
+  gap: 8px;
+}
+
+.touch-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.touch-spacer {
+  display: block;
+}
+
+.touch-btn {
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8eefc;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: none;
+  transition: background 0.1s, transform 0.05s;
+}
+
+.touch-btn.is-active {
+  background: #4dd0e1;
+  color: #06222a;
+  transform: scale(0.94);
+}
+
+.touch-btn--a {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: rgba(230, 88, 78, 0.25);
+  border-color: rgba(230, 88, 78, 0.5);
+}
+
+.touch-btn--b {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: rgba(77, 156, 230, 0.25);
+  border-color: rgba(77, 156, 230, 0.5);
 }

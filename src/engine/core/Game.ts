@@ -1,4 +1,5 @@
 import { Keyboard } from "../input/Keyboard";
+import { Mouse } from "../input/Mouse";
 import { Scene } from "./Scene";
 
 export class Game {
@@ -26,6 +27,7 @@ export class Game {
     this.scene.render(this.ctx);
     // Roll over per-frame input edges after everything has read them.
     Keyboard.instance.endFrame();
+    Mouse.instance.endFrame();
     requestAnimationFrame(this.loop);
   };
 }
