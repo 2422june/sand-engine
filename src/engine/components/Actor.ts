@@ -1,5 +1,6 @@
 import { Component } from "../core/Component";
 import { InputController } from "./InputController";
+import { Movable } from "./Movable";
 import { Velocity2D } from "./Velocity2D";
 
 export type AxisBinding = {
@@ -10,10 +11,11 @@ export type AxisBinding = {
 /**
  * Turns input into movement.
  *
- * Reads directional axes from a sibling {@link InputController} and writes the
- * result into a sibling {@link Velocity2D}. This keeps `InputController` about
- * *input* and `Actor` about *what the entity does with it* — so the same input
- * component can drive different actors (player, remote, AI-fed) later.
+ * Reads directional axes from a sibling {@link InputController}. If the entity
+ * has a {@link Movable}, movement is routed through it so it respects collision
+ * (blocked by solids, slides along walls); otherwise it falls back to writing a
+ * sibling {@link Velocity2D} for free movement. This keeps `InputController`
+ * about *input* and `Actor` about *what the entity does with it*.
  */
 export class Actor extends Component {
   horizontal: AxisBinding;
@@ -37,14 +39,32 @@ export class Actor extends Component {
     this.speed = options?.speed ?? 160;
   }
 
-  override update(): void {
+  override update(deltaTime: number): void {
     const input = this.entity?.getComponent(InputController);
-    const velocity = this.entity?.getComponent(Velocity2D);
-    if (!input || !velocity) {
+    if (!input) {
       return;
     }
 
-    velocity.vx = input.getAxis(this.horizontal.negative, this.horizontal.positive) * this.speed;
-    velocity.vy = input.getAxis(this.vertical.negative, this.vertical.positive) * this.speed;
+    const vx = input.getAxis(this.horizontal.negative, this.horizontal.positive) * this.speed;
+    const vy = input.getAxis(this.vertical.negative, this.vertical.positive) * this.speed;
+
+    const movable = this.entity?.getComponent(Movable);
+    if (movable) {
+      // Collision-aware movement: apply displacement this frame, and keep any
+      // Velocity2D from double-moving the entity.
+      movable.move(vx * deltaTime, vy * deltaTime);
+      const velocity = this.entity?.getComponent(Velocity2D);
+      if (velocity) {
+        velocity.vx = 0;
+        velocity.vy = 0;
+      }
+      return;
+    }
+
+    const velocity = this.entity?.getComponent(Velocity2D);
+    if (velocity) {
+      velocity.vx = vx;
+      velocity.vy = vy;
+    }
   }
 }
