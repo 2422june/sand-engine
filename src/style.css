@@ -81,6 +81,56 @@ canvas {
     linear-gradient(180deg, rgba(58, 88, 125, 0.24), rgba(10, 13, 18, 0.2));
 }
 
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #9fd8e2;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: #4dd0e1;
+}
+
+/* ---- Launcher (root page) ---- */
+.launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.launcher-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #cdd9ec;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+}
+
+.launcher-card:hover {
+  background: rgba(77, 208, 225, 0.14);
+  border-color: #4dd0e1;
+  transform: translateY(-2px);
+}
+
+.launcher-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #eaf3ff;
+}
+
+.launcher-card__desc {
+  font-size: 13px;
+  color: #9fb2cc;
+}
+
 /* ---- Mobile on-screen gamepad ---- */
 .touch-controls {
   display: flex;
