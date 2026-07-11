@@ -15,6 +15,8 @@ export type BootOptions = {
   create: GameFactory;
   width?: number;
   height?: number;
+  /** Show the on-screen D-pad/A/B overlay on touch devices. Default: true. */
+  touchControls?: boolean;
 };
 
 /**
@@ -58,10 +60,14 @@ export function bootGame(options: BootOptions): Game {
   // Route pointer input (chess/checkers) into canvas coordinate space.
   Mouse.instance.attach(canvas);
 
-  // On-screen gamepad for mobile (drives Keyboard virtual keys). Shows only on
-  // touch devices; append `?pad=1` to force it on desktop for testing.
-  const forcePad = new URLSearchParams(location.search).get("pad") === "1";
-  new TouchControls(shell, forcePad);
+  // On-screen gamepad for mobile (drives Keyboard virtual keys), overlaid
+  // inside the stage so it doesn't shrink the game area. Shows only on touch
+  // devices; append `?pad=1` to force it on desktop for testing. Games that
+  // don't need it (pointer-only boards, tap-driven narrative) opt out.
+  if (options.touchControls ?? true) {
+    const forcePad = new URLSearchParams(location.search).get("pad") === "1";
+    new TouchControls(stage, forcePad);
+  }
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {

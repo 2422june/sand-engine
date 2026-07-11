@@ -9,6 +9,9 @@ export type ButtonStyle = {
   disabledColor?: string;
   textColor?: string;
   font?: string;
+  textAlign?: CanvasTextAlign;
+  /** Horizontal inset from the edge when `textAlign` is "left" or "right". */
+  textPadding?: number;
 };
 
 /**
@@ -50,6 +53,8 @@ export class Button extends UIElement {
       disabledColor: style?.disabledColor ?? "#1a2233",
       textColor: style?.textColor ?? "#eaf1ff",
       font: style?.font ?? "16px Pretendard, sans-serif",
+      textAlign: style?.textAlign ?? "center",
+      textPadding: style?.textPadding ?? 12,
     };
   }
 
@@ -121,9 +126,15 @@ export class Button extends UIElement {
 
     ctx.fillStyle = this.style.textColor;
     ctx.font = this.style.font;
-    ctx.textAlign = "center";
+    ctx.textAlign = this.style.textAlign;
     ctx.textBaseline = "middle";
-    ctx.fillText(this.label, x + this.width / 2, y + this.height / 2);
+    let textX = x + this.width / 2;
+    if (this.style.textAlign === "left") {
+      textX = x + this.style.textPadding;
+    } else if (this.style.textAlign === "right") {
+      textX = x + this.width - this.style.textPadding;
+    }
+    ctx.fillText(this.label, textX, y + this.height / 2);
     ctx.restore();
   }
 }

@@ -8,6 +8,7 @@ import { defineConfig } from "vite";
  * Input paths are relative to the project root.
  */
 export default defineConfig({
+  base: "./",
   build: {
     rollupOptions: {
       input: {
@@ -17,6 +18,7 @@ export default defineConfig({
         chess: "chess.html",
         checkers: "checkers.html",
         crossy: "crossy.html",
+        "anomaly-research": "anomaly-research.html",
       },
     },
   },

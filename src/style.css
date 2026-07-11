@@ -1,7 +1,6 @@
 :root {
   color: #f5f1e8;
-  background:
-    radial-gradient(circle at top, #20354d 0%, #101826 45%, #070b12 100%);
+  background: #0b0d12;
   font-family: "Pretendard", "Noto Sans KR", sans-serif;
 }
 
@@ -18,11 +17,11 @@ body {
   display: grid;
   min-height: 100vh;
   place-items: center;
-  padding: 24px;
+  padding: 8px;
 }
 
 .shell {
-  width: min(100%, 960px);
+  width: min(100%, 1600px);
 }
 
 .shell h1,
@@ -65,10 +64,8 @@ body {
 }
 
 .stage {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
 canvas {
@@ -131,16 +128,20 @@ canvas {
   color: #9fb2cc;
 }
 
-/* ---- Mobile on-screen gamepad ---- */
+/* ---- Mobile on-screen gamepad (overlaid inside the stage, not below it) ---- */
 .touch-controls {
+  position: absolute;
+  inset: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   gap: 16px;
-  margin-top: 16px;
+  padding: 16px;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none;
+  /* Only the pad/buttons themselves should catch pointer events — empty space
+     between them must let taps/clicks through to the game underneath. */
+  pointer-events: none;
 }
 
 .touch-controls--hidden {
@@ -152,12 +153,16 @@ canvas {
   grid-template-columns: repeat(3, 56px);
   grid-template-rows: repeat(2, 56px);
   gap: 8px;
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .touch-actions {
   display: flex;
   gap: 12px;
   align-items: center;
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .touch-spacer {
