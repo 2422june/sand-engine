@@ -9,7 +9,8 @@ const GAMES: LauncherEntry[] = [
   { title: "체스 (2인)", href: "./chess.html", desc: "체크메이트·캐슬링·앙파상·승격" },
   { title: "체커 (2인)", href: "./checkers.html", desc: "잡기 강제·연속 점프·킹" },
   { title: "길건너 친구들", href: "./crossy.html", desc: "절차적 차선·자동차 피하기" },
-  { title: "괴이 연구소", href: "./anomaly-research.html", desc: "내러티브 선택형 어드벤처 (프로토타입)" },
+  { title: "감정의 바다", href: "./anomaly-research.html", desc: "내러티브 선택형 어드벤처 (프로토타입)" },
+  { title: "공용 템플릿 테스트", href: "./template.html", desc: "콘텐츠 없는 빈 게임 — 공용 셸/템플릿 확인용" },
 ];
 
 const app = document.querySelector<HTMLDivElement>("#app");

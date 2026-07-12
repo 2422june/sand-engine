@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Design System 편집기</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; height: 100vh; display: grid;
+        grid-template-rows: auto 1fr auto;
+        font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+        background: #0e131b; color: #e6edf6;
+      }
+      header {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        padding: 10px 16px; background: #131b26; border-bottom: 1px solid #24303f;
+      }
+      header h1 { font-size: 15px; margin: 0; font-weight: 700; }
+      header .grow { flex: 1; }
+      select, button, input[type="text"] {
+        font: inherit; background: #1c2635; color: #e6edf6;
+        border: 1px solid #33445c; border-radius: 8px; padding: 6px 10px;
+      }
+      button { cursor: pointer; }
+      button:hover:not(:disabled) { background: #263449; }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      button.primary { background: #2f6fb0; border-color: #2f6fb0; font-weight: 600; }
+      button.primary:hover:not(:disabled) { background: #3a82cc; }
+      .pill { font-size: 12px; color: #9fb2cc; }
+      main { display: grid; grid-template-columns: 210px 1fr; min-height: 0; }
+      .side { border-right: 1px solid #24303f; display: flex; flex-direction: column; min-height: 0; }
+      .tabs { display: flex; flex-direction: column; padding: 8px; gap: 4px; }
+      .tab {
+        text-align: left; background: transparent; border: 1px solid transparent;
+        border-radius: 8px; padding: 8px 10px; color: #cdd9ec; font-size: 14px;
+      }
+      .tab:hover { background: #1c2635; }
+      .tab.active { background: #223048; border-color: #33445c; font-weight: 600; }
+      .tab .sub { display: block; font-size: 11px; color: #7d8ca6; }
+      .images { padding: 8px; border-top: 1px solid #24303f; overflow-y: auto; }
+      .images h3 { font-size: 12px; color: #9fb2cc; margin: 4px 0 8px; }
+      .thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .thumbs img { width: 100%; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid #33445c; }
+      .thumbs figcaption { font-size: 9px; color: #7d8ca6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .editor { display: flex; flex-direction: column; min-height: 0; }
+      .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid #24303f; }
+      textarea {
+        flex: 1; resize: none; border: 0; outline: none; padding: 16px;
+        background: #0b0f16; color: #dbe6f3; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+        font-size: 13px; line-height: 1.55; min-height: 0;
+      }
+      footer { padding: 6px 16px; font-size: 12px; color: #9fb2cc; background: #131b26; border-top: 1px solid #24303f; }
+      footer.err { color: #ff8a80; }
+      footer.ok { color: #79d1a0; }
+      .dot { color: #ffcf6b; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🎛 Game Design System 편집기</h1>
+      <select id="game" title="게임 선택"></select>
+      <button id="newGame">+ 새 게임</button>
+      <span class="grow"></span>
+    </header>
+
+    <main>
+      <div class="side">
+        <div class="tabs" id="tabs">
+          <button class="tab" data-type="document">Document<span class="sub">이번 게임 기획서</span></button>
+          <button class="tab" data-type="blueprint">Blue Print<span class="sub">구현 설계 (게임별)</span></button>
+          <button class="tab" data-type="rulebook">Rule Book<span class="sub">누적 참고서 (공용)</span></button>
+          <button class="tab" data-type="docrule">Document Rule<span class="sub">작성 규칙 (공용)</span></button>
+        </div>
+        <div class="images">
+          <h3>화면 설계 이미지</h3>
+          <input type="file" id="imgFile" accept="image/*" multiple style="width:100%;font-size:11px" />
+          <div class="thumbs" id="thumbs"></div>
+        </div>
+      </div>
+
+      <div class="editor">
+        <div class="toolbar">
+          <button id="save" class="primary">저장 (Ctrl+S)</button>
+          <span class="grow"></span>
+          <span class="pill" id="pathInfo"></span>
+        </div>
+        <textarea id="editor" spellcheck="false" placeholder="문서를 선택하세요…"></textarea>
+      </div>
+    </main>
+
+    <footer id="status">준비됨</footer>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const state = { game: null, type: "document", dirty: false };
+
+      const setStatus = (msg, kind = "") => {
+        const f = $("status");
+        f.textContent = msg;
+        f.className = kind;
+      };
+      const markDirty = (d) => {
+        state.dirty = d;
+        $("pathInfo").innerHTML = (d ? '<span class="dot">● </span>' : "") + ($("pathInfo").dataset.path || "");
+      };
+
+      async function api(path, opts) {
+        const res = await fetch(path, opts);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      }
+
+      async function loadGames(selectId) {
+        const { games } = await api("/api/games");
+        const sel = $("game");
+        sel.innerHTML = "";
+        for (const g of games) {
+          const o = document.createElement("option");
+          o.value = g.id;
+          o.textContent = g.id + (g.hasBlueprint ? " ✔BP" : "");
+          sel.append(o);
+        }
+        if (selectId && games.some((g) => g.id === selectId)) sel.value = selectId;
+        state.game = sel.value || null;
+      }
+
+      async function loadFile() {
+        if (!state.game && state.type !== "rulebook" && state.type !== "docrule") {
+          $("editor").value = "";
+          return;
+        }
+        const q = new URLSearchParams({ type: state.type, id: state.game || "" });
+        const { content, path } = await api("/api/file?" + q);
+        $("editor").value = content;
+        $("pathInfo").dataset.path = path;
+        markDirty(false);
+        setStatus(`불러옴 · ${path}`);
+      }
+
+      async function save() {
+        try {
+          await api("/api/file", {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ type: state.type, id: state.game || "", content: $("editor").value }),
+          });
+          markDirty(false);
+          setStatus("저장됨 ✓", "ok");
+          loadGames(state.game); // BP 저장 시 ✔BP 갱신
+        } catch (e) {
+          setStatus("저장 실패: " + e.message, "err");
+        }
+      }
+
+      async function loadImages() {
+        const wrap = $("thumbs");
+        wrap.innerHTML = "";
+        if (!state.game) return;
+        try {
+          const { images } = await api("/api/images?id=" + encodeURIComponent(state.game));
+          for (const name of images) {
+            const fig = document.createElement("figure");
+            fig.style.margin = "0";
+            fig.innerHTML =
+              `<img src="/api/image?id=${encodeURIComponent(state.game)}&name=${encodeURIComponent(name)}" title="${name}"/>` +
+              `<figcaption>${name}</figcaption>`;
+            wrap.append(fig);
+          }
+        } catch {}
+      }
+
+      async function uploadImages(files) {
+        for (const file of files) {
+          const buf = await file.arrayBuffer();
+          let bin = "";
+          const bytes = new Uint8Array(buf);
+          for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+          const dataBase64 = btoa(bin);
+          await api("/api/upload", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id: state.game, name: file.name, dataBase64 }),
+          });
+        }
+        setStatus(`이미지 ${files.length}개 업로드됨 ✓`, "ok");
+        loadImages();
+      }
+
+      function selectTab(type) {
+        state.type = type;
+        for (const b of document.querySelectorAll(".tab")) b.classList.toggle("active", b.dataset.type === type);
+        loadFile();
+      }
+
+      // ── 이벤트 ──
+      $("game").addEventListener("change", (e) => {
+        state.game = e.target.value || null;
+        loadFile();
+        loadImages();
+      });
+      $("newGame").addEventListener("click", () => {
+        const id = prompt("새 게임 id (영문/숫자/-_):", "");
+        if (!id) return;
+        if (!/^[a-z0-9][a-z0-9_-]*$/i.test(id)) {
+          setStatus("id는 영문/숫자/-_ 만 가능", "err");
+          return;
+        }
+        const sel = $("game");
+        if (![...sel.options].some((o) => o.value === id)) {
+          const o = document.createElement("option");
+          o.value = id;
+          o.textContent = id + " (신규)";
+          sel.append(o);
+        }
+        sel.value = id;
+        state.game = id;
+        selectTab("document");
+        loadImages();
+        setStatus(`새 게임 '${id}' — Document를 작성하고 저장하면 파일이 만들어집니다`);
+      });
+      for (const b of document.querySelectorAll(".tab")) b.addEventListener("click", () => selectTab(b.dataset.type));
+      $("save").addEventListener("click", save);
+      $("editor").addEventListener("input", () => markDirty(true));
+      $("imgFile").addEventListener("change", (e) => {
+        if (e.target.files.length) uploadImages([...e.target.files]);
+        e.target.value = "";
+      });
+      window.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          save();
+        }
+      });
+
+      // ── 초기화 ──
+      (async () => {
+        try {
+          await loadGames();
+          selectTab("document");
+          loadImages();
+        } catch (e) {
+          setStatus("초기화 실패: " + e.message, "err");
+        }
+      })();
+    </script>
+  </body>
+</html>

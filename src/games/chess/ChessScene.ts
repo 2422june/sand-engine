@@ -55,13 +55,14 @@ export class ChessScene extends CanvasScene {
   private status = "";
   private gameOver = false;
 
-  // Board geometry.
+  // Board geometry. 세로 화면: 상단에 차례 표시, 보드는 가로 중앙.
   private readonly cell = 60;
-  private readonly boardX = 40;
-  private readonly boardY = 30;
+  private readonly boardX: number;
+  private readonly boardY = 70;
 
   constructor(width: number, height: number) {
     super(width, height);
+    this.boardX = Math.round((width - SIZE * this.cell) / 2);
     this.reset();
   }
 
@@ -443,17 +444,13 @@ export class ChessScene extends CanvasScene {
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
 
-    // Side panel.
-    const px = boardX + SIZE * cell + 30;
-    ctx.fillStyle = "#e8eefc";
-    ctx.font = "bold 22px 'Noto Sans KR', sans-serif";
-    ctx.fillText("체스", px, boardY + 26);
-    ctx.font = "15px 'Noto Sans KR', sans-serif";
-    ctx.fillStyle = "#bfd1e6";
-    ctx.fillText(this.status, px, boardY + 62);
-    ctx.fillStyle = "#6f83a3";
-    ctx.font = "12px 'Noto Sans KR', sans-serif";
-    const hints = ["말 클릭 → 선택", "초록 표시 → 이동/잡기", "캐슬링·앙파상·승격 지원", "2인용 (마우스)"];
-    hints.forEach((h, i) => ctx.fillText(h, px, boardY + 110 + i * 22));
+    // 차례/승패 — 게임 화면 상단 중앙(인게임 HUD).
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = this.gameOver ? "#ffd54f" : "#e8eefc";
+    ctx.font = "bold 18px 'Noto Sans KR', sans-serif";
+    ctx.fillText(this.status, this.width / 2, boardY / 2);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
   }
 }

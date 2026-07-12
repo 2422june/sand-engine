@@ -12,7 +12,8 @@
 | 🔒 확정 | 더 손댈 게 없다고 판단된 패턴. |
 
 > **수렴 지표:** 전 항목이 🔒 이면 그 장르/요소는 "완성". 남은 🧪·🔬 개수 = 남은 일.
-> 근거 게임: `mindhack, tetris, chess, checkers, crossy` (5) + Document `anomaly-research` (1).
+> 근거 게임(플레이 가능): `mindhack, tetris, chess, checkers, crossy, anomaly-research` (6) + 공용 셸 시드 `template`.
+> 화면 방향 — 가로: `mindhack·anomaly-research` / 세로: `tetris·chess·checkers·crossy` / fill(전체화면): `template`.
 
 ---
 
@@ -38,6 +39,20 @@
   + `vite.config.ts` 입력 등록.
 - 🔒 **씬 패턴** — `CanvasScene` 상속, `update(dt)` / `render(ctx)` 오버라이드.
 - 🔒 **검증 필수** — `npm run build`(tsc+vite) 통과 + 실제 플레이 자체검증 후 완료 보고.
+
+### 화면/셸 규약 (플랫폼) — *2026-07-12 신설*
+- 🔬(6) **게임 화면 = 캔버스뿐** — 화면(페이지) 밖엔 어떤 글·버튼·요소도 두지 않는다. 게임 이름은
+  브라우저 **탭 제목**(`document.title`)으로만. 조작법·상태·HUD·다이얼로그는 전부 **캔버스 안에** 그린다.
+- 🧪 **캔버스 크기 = fill 기본** — `bootGame`에 `width`/`height`를 **둘 다 생략하면 fill 모드**:
+  캔버스가 뷰포트를 꽉 채우고 리사이즈·회전·모바일 주소창 변화에 `CanvasScene.resize()`로 실시간 대응.
+  새 게임의 표준(시드: `template`). render는 `this.width/height` 기반으로 작성해 어떤 크기든 대응.
+- 🧪 **고정 레이아웃 게임(가로/세로 둘 다 가능)** — 좌표를 고정한 게임은 논리 크기를 지정하고
+  **화면 중앙정렬**. 게임 성격에 맞춰 가로 또는 세로를 고른다.
+  세로 게임은 `100dvh`로 모바일 상단 chrome 제외. **가로 게임은 세로 폰에서 회전 안내 아이콘**
+  (⟳ "돌려주세요"), 세로 게임은 가로 폰에서 "세워주세요". 회전 안내는 fill 셸에는 적용하지 않는다.
+  현재 — 가로: `mindhack·anomaly-research` / 세로: `tetris·chess·checkers·crossy` / fill: `template`.
+- 🔬(6) **뒤로 가기 = 종료 확인** — 상단 '메인' 링크 없음. 뒤로 가기(브라우저/기기 back)를 가로채
+  인게임 "게임 종료하기" 확인 → 메인(index)으로. 히스토리 트랩으로 확인 없이는 안 나가짐.
 
 ### Document→Blue Print 정형화 규칙
 - 🔬(1) 모든 Document 항목을 **①엔진 컴포넌트 매핑 ②입력 매핑 ③승/패/진행 조건 ④상태 모델**로 환원.
@@ -66,11 +81,11 @@
 경량 전투 + 보고서(메타). 캔버스 렌더보다 **UI 툴킷 중심**.
 
 ### 콘텐츠 구조 (핵심)
-- 🧪 **Passage 그래프** — 이야기를 노드 그래프로. 노드:
-  `{ id, title?, body:string[], onEnter?:Effect[], choices?:Choice[], goto?:id, tags? }`.
-- 🧪 **Choice** — `{ label, outcome:string[], effects?:Effect[], goto?:id, requires?:Cond[] }`.
+- 🧪 **Passage 그래프** — 이야기를 노드 그래프로. 노드(구현 기준 `story.ts`):
+  `{ id, text:string, onEnter?:Effect[], choices?:Choice[], next?:id, ending?, endingTitle?, hub? }`.
+- 🧪 **Choice** — `{ id, label, requires?:Condition, effects:Effect[] }`. 전이(`goto`)는 effects의 `goto` op으로.
   선택지는 위험을 라벨로 예고하고, 결과 텍스트는 결정론적(같은 상태면 같은 결과 = 정직한 난이도).
-- 🧪 **Effect(op) 목록** — `giveItem/consumeItem/modStat/setFlag/incFlag/applyStatus/unlockReport/goto`.
+- 🧪 **Effect(op) 목록** — `giveItem/consumeItem/modStat/applyStatus/clearStatus/setFlag/incFlag/unlockReport/revealCharacter/setCondition/goto`. 조건 `requires`: `hasItem/not/flagGte`.
   - Document 예: "장갑이 녹음"=`consumeItem(gloves)`, "몸이 가벼워짐"=`modStat(speed,+1)`,
     "출혈"=`applyStatus(bleed)`(지속피해), "권총 획득"=`giveItem(pistol)`.
 - 🧪 **분기/루프 퍼즐** — 노드가 서로를 가리키게 해 잘못된 경로는 시작 노드로 되돌림. 정답 시퀀스/
@@ -85,9 +100,11 @@
 - 🧪 선택지 = 포인터 탭 + 숫자키 1~4. 낭독 진행/다음 = 클릭·Space·Enter. (엔진 `Mouse`/`Keyboard`/터치 재사용)
 
 ### UI/표현 스타일
-- 🧪 레이아웃: **낭독 패널**(본문, 선택적 타자기 효과) + **선택지 리스트**(Button) +
-    **상태바 상단**(HP `ProgressBar`, 상태/능력 라벨) + **소지품 서랍**(옆) + **로그/히스토리**.
-    전부 엔진 UI 툴킷(Panel/Label/Button/ProgressBar)으로.
+- 🧪 레이아웃(관제실): **흑백 관제실 프레임 배경** + **컬러 장면창**(코너 브래킷) + **우측 이벤트 로그**
+    (대사·결과 누적, 하단 선택지 바) ↔ **업무노트(태블릿) 토글** + **플레이어 장치**(명함/HP/아이템 그리드) +
+    **좌측 슬롯 스트립** + **인물 카드 레일**. 전부 엔진 UI 툴킷(Panel/Label/Button/ProgressBar/Sprite)으로.
+    (상세: Blue Print §9·§17·§18)
+- 🧪 컬러는 장면창에만, 나머진 흑백. 낭독은 교체가 아니라 **누적 로그**.
 - 🧪 호러 톤: 어두운 팔레트, 느린 페이드, 절제된 SFX(무전 치직/괴이음)는 `AudioManager`.
 
 ### 전투(경량)

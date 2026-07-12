@@ -349,13 +349,12 @@ export class MindHackScene extends CanvasScene {
     const orbHealth = this.orb.getComponent(Health);
     const enemyState = this.orb.getComponent(StateMachine)?.currentState ?? "unknown";
 
+    // 이름/조작법 텍스트는 제거, 상태 readout만.
     ctx.fillStyle = "#a6bbd2";
     ctx.font = "16px Pretendard, sans-serif";
-    ctx.fillText("Mindhack prototype scene", 24, 36);
-    ctx.fillText("Move: WASD / Arrow Keys", 24, 60);
-    ctx.fillText(`Player HP: ${Math.ceil(playerHealth?.hp ?? 0)}`, 24, 92);
-    ctx.fillText(`Orb HP: ${Math.ceil(orbHealth?.hp ?? 0)}`, 24, 116);
-    ctx.fillText(`Orb State: ${enemyState}`, 24, 140);
+    ctx.fillText(`Player HP: ${Math.ceil(playerHealth?.hp ?? 0)}`, 24, 36);
+    ctx.fillText(`Orb HP: ${Math.ceil(orbHealth?.hp ?? 0)}`, 24, 60);
+    ctx.fillText(`Orb State: ${enemyState}`, 24, 84);
 
     this.ui.render(ctx);
   }

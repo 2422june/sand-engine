@@ -57,9 +57,9 @@ export class TetrisScene extends CanvasScene {
   private level = 1;
   private gameOver = false;
 
-  // Playfield geometry (centered, with a side panel to the right).
-  private readonly cell = 24;
-  private readonly boardX = 40;
+  // Playfield geometry (세로 화면: 보드 좌측 + 우측 정보 패널).
+  private readonly cell = 28;
+  private readonly boardX = 20;
   private readonly boardY = 30;
 
   constructor(width: number, height: number) {
@@ -271,32 +271,23 @@ export class TetrisScene extends CanvasScene {
       }
     }
 
-    // Side panel.
+    // 우측 상태 패널 — 이름/조작법은 제거, 점수·라인·레벨·NEXT만.
     const px = boardX + boardW + 28;
-    ctx.fillStyle = "#e8eefc";
-    ctx.font = "bold 20px 'Noto Sans KR', sans-serif";
-    ctx.fillText("TETRIS", px, boardY + 22);
     ctx.font = "15px 'Noto Sans KR', sans-serif";
     ctx.fillStyle = "#bfd1e6";
-    ctx.fillText(`점수  ${this.score}`, px, boardY + 60);
-    ctx.fillText(`라인  ${this.lines}`, px, boardY + 84);
-    ctx.fillText(`레벨  ${this.level}`, px, boardY + 108);
+    ctx.fillText(`점수  ${this.score}`, px, boardY + 30);
+    ctx.fillText(`라인  ${this.lines}`, px, boardY + 54);
+    ctx.fillText(`레벨  ${this.level}`, px, boardY + 78);
 
     // Next piece preview.
-    ctx.fillText("NEXT", px, boardY + 150);
+    ctx.fillText("NEXT", px, boardY + 120);
     const nm = this.nextPiece.cells;
     for (let r = 0; r < nm.length; r++) {
       for (let c = 0; c < nm[r].length; c++) {
         if (!nm[r][c]) continue;
-        this.drawCell(ctx, px + c * cell, boardY + 165 + r * cell, this.nextPiece.color);
+        this.drawCell(ctx, px + c * cell, boardY + 135 + r * cell, this.nextPiece.color);
       }
     }
-
-    // Controls hint.
-    ctx.fillStyle = "#6f83a3";
-    ctx.font = "12px 'Noto Sans KR', sans-serif";
-    const hints = ["← → 이동", "↑ / X 회전", "↓ 소프트드롭", "Space 하드드롭"];
-    hints.forEach((h, i) => ctx.fillText(h, px, boardY + 300 + i * 20));
 
     if (this.gameOver) {
       ctx.fillStyle = "rgba(0,0,0,0.72)";

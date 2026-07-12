@@ -153,6 +153,7 @@ export const PASSAGES: Record<string, Passage> = {
   b_domain: {
     id: "b_domain",
     text: "격리실 주변으로 낯선 영역(Domain)이 생성되기 시작한다. 벽의 질감이, 소리의 결이 조금씩 달라진다.",
+    onEnter: [{ op: "setFlag", flag: "domain", value: 1 }],
     next: "b_radio",
   },
   b_radio: {

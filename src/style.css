@@ -11,11 +11,13 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh; /* 모바일 주소창(동적 chrome) 제외한 실제 가시 높이 */
 }
 
 #app {
   display: grid;
   min-height: 100vh;
+  min-height: 100dvh;
   place-items: center;
   padding: 8px;
 }
@@ -66,16 +68,64 @@ body {
 .stage {
   position: relative;
   overflow: hidden;
+  /* 캔버스를 스테이지 폭 안에서 항상 가로 중앙에. (align-items는 stretch 방지) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---- Fill mode (템플릿 규칙: 캔버스가 화면 전체, 바깥엔 아무것도 없음) ---- */
+.shell.fill {
+  width: 100%;
+}
+
+.shell.fill .stage {
+  position: fixed;
+  inset: 0;
+}
+
+.shell.fill canvas {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
 }
 
 canvas {
   display: block;
-  width: 100%;
+  /* auto/auto + max-width/max-height (not a fixed width) lets the browser shrink
+     by whichever dimension is tighter — the viewport's width on desktop, its
+     height on a short mobile-landscape screen — while keeping the aspect ratio. */
+  width: auto;
   height: auto;
+  max-width: 100%;
+  /* 모바일 브라우저 상단/하단 chrome을 뺀 실제 가시 높이(dvh) 기준으로 맞춘다.
+     dvh 미지원 구형 브라우저는 위의 vh 값으로 폴백. */
+  max-height: calc(100vh - 16px);
+  max-height: calc(100dvh - 16px);
   /* Let the game own touch gestures instead of the browser scrolling/zooming. */
   touch-action: none;
   background:
     linear-gradient(180deg, rgba(58, 88, 125, 0.24), rgba(10, 13, 18, 0.2));
+}
+
+/* Phones in landscape are short — reclaim the header's vertical space for the game. */
+@media (orientation: landscape) and (max-height: 500px) {
+  #app {
+    padding: 4px;
+  }
+
+  .shell .back-link,
+  .shell h1,
+  .shell p {
+    display: none;
+  }
+
+  canvas {
+    max-height: calc(100vh - 8px);
+    max-height: calc(100dvh - 8px);
+  }
 }
 
 .back-link {
@@ -88,6 +138,131 @@ canvas {
 
 .back-link:hover {
   color: #4dd0e1;
+}
+
+/* ---- Rotate-device prompt (landscape games viewed on a portrait phone) ---- */
+.rotate-prompt {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  .shell[data-orientation="landscape"]:not(.fill) .back-link,
+  .shell[data-orientation="landscape"]:not(.fill) h1,
+  .shell[data-orientation="landscape"]:not(.fill) p,
+  .shell[data-orientation="landscape"]:not(.fill) .stage {
+    display: none;
+  }
+
+  .shell[data-orientation="landscape"]:not(.fill) .rotate-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 60vh;
+    text-align: center;
+    color: #cdd9ec;
+  }
+
+  .rotate-prompt__icon {
+    font-size: 48px;
+    animation: rotate-hint 1.6s ease-in-out infinite;
+  }
+}
+
+/* ---- Portrait games viewed on a landscape phone: ask to stand it upright ---- */
+@media (orientation: landscape) and (max-height: 500px) {
+  .shell[data-orientation="portrait"]:not(.fill) .back-link,
+  .shell[data-orientation="portrait"]:not(.fill) h1,
+  .shell[data-orientation="portrait"]:not(.fill) p,
+  .shell[data-orientation="portrait"]:not(.fill) .stage {
+    display: none;
+  }
+
+  .shell[data-orientation="portrait"]:not(.fill) .rotate-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 60vh;
+    text-align: center;
+    color: #cdd9ec;
+  }
+}
+
+@keyframes rotate-hint {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-90deg);
+  }
+}
+
+/* ---- Exit confirm (back button → quit to main) ---- */
+.exit-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 6, 10, 0.72);
+}
+
+/* Explicit display:flex above beats the UA [hidden] rule, so restore it. */
+.exit-prompt[hidden] {
+  display: none;
+}
+
+.exit-prompt__box {
+  width: min(90vw, 340px);
+  padding: 28px 28px 24px;
+  border: 1px solid #2b3a55;
+  border-radius: 16px;
+  background: #131a26;
+  text-align: center;
+}
+
+.exit-prompt__title {
+  margin: 0 0 20px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #eaf3ff;
+}
+
+.exit-prompt__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exit-prompt__btn {
+  padding: 13px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.05s;
+}
+
+.exit-prompt__btn:active {
+  transform: scale(0.97);
+}
+
+.exit-prompt__btn--quit {
+  background: #e6584e;
+  border-color: #e6584e;
+  color: #fff;
+  font-weight: 700;
+}
+
+.exit-prompt__btn--cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cdd9ec;
 }
 
 /* ---- Launcher (root page) ---- */
@@ -135,8 +310,8 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px;
   user-select: none;
   -webkit-user-select: none;
   /* Only the pad/buttons themselves should catch pointer events — empty space
@@ -150,9 +325,9 @@ canvas {
 
 .touch-dpad {
   display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(2, 56px);
-  gap: 8px;
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(2, 44px);
+  gap: 6px;
   pointer-events: auto;
   touch-action: none;
 }
@@ -170,13 +345,13 @@ canvas {
 }
 
 .touch-btn {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 16px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
   color: #e8eefc;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -191,16 +366,16 @@ canvas {
 }
 
 .touch-btn--a {
-  width: 66px;
-  height: 66px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: rgba(230, 88, 78, 0.25);
   border-color: rgba(230, 88, 78, 0.5);
 }
 
 .touch-btn--b {
-  width: 66px;
-  height: 66px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: rgba(77, 156, 230, 0.25);
   border-color: rgba(77, 156, 230, 0.5);

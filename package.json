@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gds": "node tools/gds-editor/server.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

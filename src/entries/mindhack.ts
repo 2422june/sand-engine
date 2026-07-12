@@ -3,7 +3,8 @@ import { MindHackScene } from "../games/mindhack/MindHackScene";
 
 bootGame({
   title: "MindHack (엔진 데모)",
-  subtitle: "WASD / 방향키 이동 · 엔진 기능 종합 데모",
+  width: 960, // 가로 게임 (세로 폰에선 회전 안내)
+  height: 540,
   create: (w, h) => new MindHackScene(w, h),
   touchControls: true,
 });

@@ -20,9 +20,9 @@ type Lane = {
   cars: Car[];
 };
 
-const COLS = 16;
+const COLS = 9; // 세로 화면: 9열 (540 / TILE 60)
 const TILE = 60;
-const PLAYER_SCREEN_ROW = 6; // player's fixed on-screen row (from top)
+const ROWS_BEHIND = 3; // 플레이어 뒤로 보이는 줄 수 — 나머지는 전부 전방 시야
 
 export class CrossyScene extends CanvasScene {
   private readonly keyboard = Keyboard.instance;
@@ -120,8 +120,8 @@ export class CrossyScene extends CanvasScene {
     }
 
     // Advance traffic on all lanes currently in view (a bit beyond, too).
-    const top = this.playerRow + PLAYER_SCREEN_ROW + 2;
-    const bottom = this.playerRow - (this.visibleRows() - PLAYER_SCREEN_ROW) - 2;
+    const top = this.playerRow + this.playerScreenRow + 2;
+    const bottom = this.playerRow - (this.visibleRows() - this.playerScreenRow) - 2;
     for (let row = bottom; row <= top; row++) {
       const lane = this.getLane(row);
       if (lane.type !== "road") continue;
@@ -149,8 +149,13 @@ export class CrossyScene extends CanvasScene {
     return Math.ceil(this.height / TILE);
   }
 
+  /** 플레이어가 고정되는 화면 줄(위에서부터). 세로가 길수록 아래로 내려 전방 시야를 넓힌다. */
+  private get playerScreenRow(): number {
+    return this.visibleRows() - ROWS_BEHIND;
+  }
+
   private rowToScreenY(row: number): number {
-    return (PLAYER_SCREEN_ROW - (row - this.playerRow)) * TILE;
+    return (this.playerScreenRow - (row - this.playerRow)) * TILE;
   }
 
   override render(ctx: CanvasRenderingContext2D): void {
@@ -158,7 +163,7 @@ export class CrossyScene extends CanvasScene {
 
     const rows = this.visibleRows();
     for (let screen = -1; screen <= rows; screen++) {
-      const row = this.playerRow + (PLAYER_SCREEN_ROW - screen);
+      const row = this.playerRow + (this.playerScreenRow - screen);
       if (row < 0) {
         ctx.fillStyle = "#2c3e50";
         ctx.fillRect(0, screen * TILE, this.width, TILE);
@@ -212,9 +217,6 @@ export class CrossyScene extends CanvasScene {
     ctx.fillStyle = "#e8eefc";
     ctx.font = "bold 18px 'Noto Sans KR', sans-serif";
     ctx.fillText(`점수  ${this.score}`, 16, 24);
-    ctx.font = "13px 'Noto Sans KR', sans-serif";
-    ctx.fillStyle = "#bfd1e6";
-    ctx.fillText("↑ 전진  ↓ 후진  ← → 좌우", 150, 23);
 
     if (this.gameOver) {
       ctx.fillStyle = "rgba(0,0,0,0.68)";

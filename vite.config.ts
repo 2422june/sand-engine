@@ -19,6 +19,7 @@ export default defineConfig({
         checkers: "checkers.html",
         crossy: "crossy.html",
         "anomaly-research": "anomaly-research.html",
+        template: "template.html",
       },
     },
   },
