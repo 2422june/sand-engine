@@ -1,0 +1,1 @@
+function n(e,t,o,r){switch(o){case"top":return r.topMargin;case"middle":return Math.round((e-t)/2);default:return e-t-r.bottomMargin}}function i(e,t,o="bottom"){if(t)return t;const r=e?.trim();return r?r==="나레이션"||r==="내레이션"||r==="독백"?"middle":"bottom":o}export{i,n as r};
